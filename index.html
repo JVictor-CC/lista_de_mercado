@@ -1,0 +1,515 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>Mercado do Mês</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=DM+Mono:wght@400;500&family=Figtree:wght@400;500;600&display=swap">
+<style>
+:root {
+  --bg: #F2F5F0;
+  --surface: #FFFFFF;
+  --fg: #17261E;
+  --muted: #5B6B62;
+  --line: #D9E1D8;
+  --accent: #1E7A4C;
+  --accent-fg: #FFFFFF;
+  --ok: #1E7A4C;
+  --ok-bg: #DDF0E4;
+  --low: #9A4A06;
+  --low-bg: #FBEBD3;
+  --zero: #A32626;
+  --zero-bg: #F8DADA;
+  --done: #86978C;
+  --font-display: "Bricolage Grotesque", "Trebuchet MS", system-ui, sans-serif;
+  --font-body: "Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "DM Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0F1713; --surface: #16211B; --fg: #E6EFE8; --muted: #9DB0A4; --line: #26362D;
+    --accent: #4CC48A; --accent-fg: #06180F; --ok: #4CC48A; --ok-bg: #173826;
+    --low: #F2B35B; --low-bg: #3A2A12; --zero: #F29A9A; --zero-bg: #3E1C1C; --done: #6B7D72;
+  }
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0; background: var(--bg); color: var(--fg); font-family: var(--font-body); font-size: 16px; line-height: 1.45;
+  padding: max(24px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(40px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+}
+.wrap { max-width: 1080px; margin: 0 auto; }
+h1 { font-family: var(--font-display); font-weight: 800; font-size: clamp(1.9rem, 6vw, 2.8rem); line-height: 1.02; letter-spacing: -0.02em; margin: 0 0 14px; }
+button, input, select { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+.tabs { display: flex; gap: 6px; padding: 4px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; width: fit-content; max-width: 100%; margin-bottom: 14px; }
+.tab { border: 0; background: none; padding: 9px 18px; border-radius: 9px; font-weight: 600; color: var(--muted); }
+.tab[aria-current="page"] { background: var(--accent); color: var(--accent-fg); }
+
+.bar { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; margin-bottom: 14px; }
+.summary { font-family: var(--font-mono); font-size: 13px; color: var(--muted); margin-right: auto; }
+.chips { display: flex; gap: 8px; flex-wrap: wrap; }
+.chip { padding: 7px 14px; border-radius: 99px; border: 1px solid var(--line); background: var(--surface); font-size: 14px; font-weight: 600; display: inline-flex; gap: 8px; align-items: baseline; }
+.chip small { font-family: var(--font-mono); font-weight: 400; font-size: 12px; color: var(--muted); }
+.chip[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-fg); }
+.chip[aria-pressed="true"] small { color: var(--accent-fg); opacity: .8; }
+.btn { border: 1px solid var(--line); background: var(--surface); border-radius: 10px; padding: 9px 14px; font-weight: 600; font-size: 14px; }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-fg); }
+.btn:disabled { opacity: .45; cursor: default; }
+.btn.danger { color: var(--zero); }
+
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)); gap: 16px; align-items: start; }
+.aisle { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px 6px; min-width: 0; }
+.aisle h2 { margin: 0 0 4px; display: flex; justify-content: space-between; align-items: baseline; gap: 12px; font-family: var(--font-display); font-weight: 600; font-size: 1.15rem; letter-spacing: -0.01em; }
+.aisle h2 small { font-family: var(--font-mono); font-weight: 400; font-size: 12px; color: var(--muted); }
+ul { list-style: none; margin: 0; padding: 0; }
+li { border-top: 1px solid var(--line); }
+li:first-child { border-top: 0; }
+
+.row { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; column-gap: 12px; align-items: center; padding: 10px 0; }
+.name { font-weight: 500; overflow-wrap: anywhere; }
+.meta { font-family: var(--font-mono); font-size: 12px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 2px 10px; align-items: center; }
+.qty { font-family: var(--font-mono); font-size: 14px; white-space: nowrap; text-align: right; }
+.qty b { font-weight: 500; font-size: 15px; }
+.weekly { font-family: var(--font-body); font-size: 11px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--low); background: var(--low-bg); padding: 1px 7px; border-radius: 99px; }
+.pill { font-family: var(--font-body); font-size: 11px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; padding: 1px 8px; border-radius: 99px; }
+.pill.ok { color: var(--ok); background: var(--ok-bg); }
+.pill.low { color: var(--low); background: var(--low-bg); }
+.pill.zero { color: var(--zero); background: var(--zero-bg); }
+
+input[type="checkbox"] { appearance: none; -webkit-appearance: none; margin: 0; width: 24px; height: 24px; border-radius: 7px; border: 2px solid var(--muted); background: transparent; position: relative; cursor: pointer; }
+input[type="checkbox"]:checked { background: var(--accent); border-color: var(--accent); }
+input[type="checkbox"]:checked::after { content: ""; position: absolute; left: 7px; top: 2px; width: 5px; height: 11px; border: solid var(--accent-fg); border-width: 0 2.5px 2.5px 0; transform: rotate(45deg); }
+li.done .name, li.done .qty { text-decoration: line-through; color: var(--done); }
+
+.field { border: 1px solid var(--line); background: var(--bg); border-radius: 9px; padding: 8px 10px; min-width: 0; }
+.stepper { display: flex; align-items: center; gap: 6px; }
+.stepper .field { width: 78px; text-align: center; font-family: var(--font-mono); }
+.step { width: 36px; height: 36px; border-radius: 9px; border: 1px solid var(--line); background: var(--surface); font-size: 20px; line-height: 1; }
+.unit { font-family: var(--font-mono); font-size: 13px; color: var(--muted); min-width: 3ch; }
+
+.edit { display: grid; grid-template-columns: minmax(0, 1fr) 76px 84px 112px auto; gap: 8px; padding: 10px 0; align-items: center; }
+.edit .field { width: 100%; }
+.addbox { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; margin-bottom: 16px; display: grid; gap: 10px; }
+.addbox h2 { margin: 0; font-family: var(--font-display); font-size: 1.1rem; }
+.addrow { display: grid; grid-template-columns: minmax(0, 2fr) 90px 90px minmax(0, 1fr) minmax(0, 1fr) auto; gap: 8px; align-items: center; }
+.addrow .field { width: 100%; }
+
+.actions { position: sticky; bottom: 0; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; background: var(--bg); border-top: 1px solid var(--line); padding: 12px 0 max(12px, env(safe-area-inset-bottom)); margin-top: 18px; }
+.empty { color: var(--muted); padding: 28px 0; }
+.toast { background: var(--surface); border: 1px solid var(--accent); border-radius: 12px; padding: 10px 14px; margin-bottom: 14px; display: flex; gap: 12px; align-items: center; justify-content: space-between; flex-wrap: wrap; }
+.tools { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 22px; }
+.note { color: var(--muted); font-size: 14px; max-width: 70ch; margin: 18px 0 0; }
+
+@media (max-width: 640px) {
+  .edit { grid-template-columns: minmax(0, 1fr) 76px 84px; }
+  .edit .field.trip { grid-column: 1 / span 2; }
+  .addrow { grid-template-columns: minmax(0, 1fr) 90px 90px; }
+  .addrow .field.wide { grid-column: 1 / -1; }
+}
+@media (prefers-reduced-motion: no-preference) { .tab, .chip, .btn { transition: background .15s ease; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Mercado do Mês</h1>
+  <nav class="tabs" aria-label="Seções">
+    <button class="tab" data-tab="comprar" type="button">Comprar</button>
+    <button class="tab" data-tab="estoque" type="button">Estoque</button>
+    <button class="tab" data-tab="itens" type="button">Itens</button>
+  </nav>
+  <div id="toast"></div>
+  <main id="view"></main>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var SECTIONS = ["Hortifruti", "Carnes e ovos", "Laticínios e frios", "Padaria", "Café da manhã", "Mercearia", "Lanches e carro"];
+  var UNITS = ["un", "kg", "g", "L", "pct", "cx", "kit", "maços"];
+  var TRIPS = { m: "Compra do mês", s: "Reposição semanal" };
+
+  // [seção, nome, quantidade padrão, unidade, tipo: m = mensal, s = semanal]
+  var SEED = [
+    ["Hortifruti", "Banana prata", 14, "un", "s"], ["Hortifruti", "Maçã", 6, "un", "s"],
+    ["Hortifruti", "Mamão papaia", 2, "un", "s"], ["Hortifruti", "Laranja (para suco)", 8, "un", "s"],
+    ["Hortifruti", "Tomate", 1, "kg", "s"], ["Hortifruti", "Cenoura", 500, "g", "s"],
+    ["Hortifruti", "Abobrinha", 500, "g", "s"], ["Hortifruti", "Brócolis", 2, "un", "s"],
+    ["Hortifruti", "Alface", 2, "un", "s"], ["Hortifruti", "Couve", 2, "maços", "s"],
+    ["Hortifruti", "Pimentão", 2, "un", "s"], ["Hortifruti", "Cheiro-verde", 2, "maços", "s"],
+    ["Hortifruti", "Limão", 6, "un", "s"], ["Hortifruti", "Cebola", 3, "kg", "m"],
+    ["Hortifruti", "Alho", 400, "g", "m"], ["Hortifruti", "Batata inglesa", 3, "kg", "m"],
+    ["Hortifruti", "Batata-doce", 2, "kg", "m"], ["Hortifruti", "Aipim congelado", 1.5, "kg", "m"],
+    ["Carnes e ovos", "Peito de frango", 3, "kg", "m"], ["Carnes e ovos", "Sobrecoxa de frango", 2, "kg", "m"],
+    ["Carnes e ovos", "Carne moída", 2, "kg", "m"], ["Carnes e ovos", "Patinho em bifes", 1.5, "kg", "m"],
+    ["Carnes e ovos", "Filé de tilápia", 1.5, "kg", "m"], ["Carnes e ovos", "Linguiça", 1, "kg", "m"],
+    ["Carnes e ovos", "Ovos", 15, "un", "s"],
+    ["Laticínios e frios", "Leite UHT", 6, "L", "m"], ["Laticínios e frios", "Iogurte natural", 4, "un", "s"],
+    ["Laticínios e frios", "Queijo muçarela fatiado", 300, "g", "s"], ["Laticínios e frios", "Queijo minas frescal", 250, "g", "s"],
+    ["Laticínios e frios", "Peito de peru", 200, "g", "s"], ["Laticínios e frios", "Requeijão", 2, "un", "m"],
+    ["Laticínios e frios", "Manteiga", 1, "un", "m"], ["Laticínios e frios", "Pão de queijo congelado", 1, "kg", "m"],
+    ["Padaria", "Pão francês", 10, "un", "s"], ["Padaria", "Pão de forma integral", 1, "pct", "s"],
+    ["Padaria", "Tortilha wrap", 1, "pct", "s"],
+    ["Café da manhã", "Café gourmet em pó (pacote de 250 g)", 2, "un", "m"], ["Café da manhã", "Filtro de papel", 1, "cx", "m"],
+    ["Café da manhã", "Açúcar", 1, "kg", "m"], ["Café da manhã", "Aveia em flocos", 500, "g", "m"],
+    ["Café da manhã", "Granola", 500, "g", "m"], ["Café da manhã", "Flocão de milho (cuscuz)", 1, "kg", "m"],
+    ["Café da manhã", "Goma de tapioca", 1, "kg", "m"], ["Café da manhã", "Farinha de trigo (panqueca)", 1, "kg", "m"],
+    ["Café da manhã", "Achocolatado", 1, "un", "m"], ["Café da manhã", "Geleia", 1, "un", "m"],
+    ["Mercearia", "Arroz", 5, "kg", "m"], ["Mercearia", "Feijão", 2, "kg", "m"],
+    ["Mercearia", "Macarrão", 2, "kg", "m"], ["Mercearia", "Farinha de mandioca", 500, "g", "m"],
+    ["Mercearia", "Lentilha", 500, "g", "m"], ["Mercearia", "Atum em lata", 6, "un", "m"],
+    ["Mercearia", "Milho ou ervilha em lata", 2, "un", "m"], ["Mercearia", "Molho de tomate", 6, "un", "m"],
+    ["Mercearia", "Extrato de tomate", 2, "un", "m"], ["Mercearia", "Maionese", 1, "un", "m"],
+    ["Mercearia", "Óleo de soja", 2, "un", "m"], ["Mercearia", "Azeite", 1, "un", "m"],
+    ["Mercearia", "Sal", 1, "kg", "m"], ["Mercearia", "Vinagre", 1, "un", "m"],
+    ["Mercearia", "Caldo de legumes ou galinha", 1, "cx", "m"],
+    ["Mercearia", "Temperos secos (cominho, orégano, colorau, louro)", 1, "kit", "m"],
+    ["Lanches e carro", "Cream cracker", 3, "pct", "m"], ["Lanches e carro", "Castanhas ou amendoim", 300, "g", "m"],
+    ["Lanches e carro", "Barra de cereal", 12, "un", "m"], ["Lanches e carro", "Pipoca de micro-ondas", 4, "un", "m"],
+    ["Lanches e carro", "Chocolate", 2, "un", "m"]
+  ];
+
+  function seedItems() {
+    return SEED.map(function (r, i) {
+      return { id: "s" + i, section: r[0], name: r[1], qty: r[2], unit: r[3], trip: r[4] };
+    });
+  }
+
+  var KEY = "mercado-app-v1";
+  var state = { items: seedItems(), stock: {}, cart: {}, tab: "comprar", trip: "all", sfilter: "all", undo: null, confirmReset: false };
+
+  function load() {
+    try {
+      var raw = localStorage.getItem(KEY);
+      if (!raw) return;
+      var d = JSON.parse(raw);
+      if (d && Array.isArray(d.items) && d.items.length) {
+        state.items = d.items;
+        state.stock = d.stock || {};
+        state.cart = d.cart || {};
+      }
+    } catch (e) {}
+  }
+  function save() {
+    try { localStorage.setItem(KEY, JSON.stringify({ items: state.items, stock: state.stock, cart: state.cart })); } catch (e) {}
+  }
+
+  function round(n) { return Math.round(n * 100) / 100; }
+  function fmt(n) { return round(n).toLocaleString("pt-BR", { maximumFractionDigits: 2 }); }
+  function parseNum(v) {
+    var n = parseFloat(String(v).replace(",", "."));
+    return isFinite(n) && n >= 0 ? round(n) : 0;
+  }
+  function stockOf(it) { return state.stock[it.id] || 0; }
+  function need(it) { return round(Math.max(0, it.qty - stockOf(it))); }
+  function stepOf(unit) { return unit === "kg" ? 0.5 : unit === "g" ? 100 : 1; }
+  function status(it) {
+    var s = stockOf(it);
+    if (s <= 0) return ["zero", "zerado"];
+    if (s < it.qty) return ["low", "faltam " + fmt(it.qty - s) + " " + it.unit];
+    return ["ok", "completo"];
+  }
+
+  function h(tag, props, kids) {
+    var e = document.createElement(tag);
+    props = props || {};
+    Object.keys(props).forEach(function (k) {
+      var v = props[k];
+      if (v === false || v == null) return;
+      if (k === "class") e.className = v;
+      else if (k === "text") e.textContent = v;
+      else if (k === "checked" || k === "value" || k === "disabled") e[k] = v;
+      else if (k.slice(0, 2) === "on") e.addEventListener(k.slice(2), v);
+      else e.setAttribute(k, v === true ? "" : v);
+    });
+    (kids || []).forEach(function (c) {
+      if (c == null) return;
+      e.appendChild(typeof c === "string" ? document.createTextNode(c) : c);
+    });
+    return e;
+  }
+
+  var view = document.getElementById("view");
+  var toastEl = document.getElementById("toast");
+
+  function groupBySection(list) {
+    var out = [];
+    var names = SECTIONS.slice();
+    list.forEach(function (it) { if (names.indexOf(it.section) < 0) names.push(it.section); });
+    names.forEach(function (s) {
+      var items = list.filter(function (it) { return it.section === s; });
+      if (items.length) out.push({ section: s, items: items });
+    });
+    return out;
+  }
+
+  function chips(opts, current, onPick) {
+    return h("div", { class: "chips" }, opts.map(function (o) {
+      return h("button", { class: "chip", type: "button", "aria-pressed": String(current === o[0]), onclick: function () { onPick(o[0]); } },
+        [o[1], h("small", { text: String(o[2]) })]);
+    }));
+  }
+
+  function showToast(msg, undoFn) {
+    toastEl.textContent = "";
+    if (!msg) return;
+    var kids = [h("span", { text: msg })];
+    if (undoFn) kids.push(h("button", { class: "btn", type: "button", text: "Desfazer", onclick: function () { undoFn(); toastEl.textContent = ""; } }));
+    toastEl.appendChild(h("div", { class: "toast", role: "status" }, kids));
+  }
+
+  /* ---------- Comprar ---------- */
+  function renderComprar() {
+    var needed = state.items.filter(function (it) { return need(it) > 0; });
+    var shown = needed.filter(function (it) { return state.trip === "all" || it.trip === state.trip; });
+    var inCart = shown.filter(function (it) { return state.cart[it.id]; });
+    function cnt(k) { return needed.filter(function (it) { return k === "all" || it.trip === k; }).length; }
+
+    view.appendChild(h("div", { class: "bar" }, [
+      h("span", { class: "summary", text: shown.length + (shown.length === 1 ? " item para comprar" : " itens para comprar") + " · " + inCart.length + " no carrinho" }),
+      chips([["all", "Tudo", cnt("all")], ["m", TRIPS.m, cnt("m")], ["s", TRIPS.s, cnt("s")]], state.trip, function (k) { state.trip = k; render(); })
+    ]));
+
+    if (!shown.length) {
+      view.appendChild(h("p", { class: "empty", text: needed.length ? "Nada para comprar neste filtro." : "O estoque cobre todas as quantidades padrão. Ajuste o que você tem em casa na aba Estoque." }));
+      return;
+    }
+
+    var grid = h("div", { class: "grid" });
+    groupBySection(shown).forEach(function (g) {
+      var ul = h("ul");
+      g.items.forEach(function (it) {
+        var li = h("li", { class: state.cart[it.id] ? "done" : "" });
+        var cb = h("input", { type: "checkbox", id: "c-" + it.id, checked: !!state.cart[it.id] });
+        cb.addEventListener("change", function () {
+          if (cb.checked) state.cart[it.id] = true; else delete state.cart[it.id];
+          save(); render();
+        });
+        var meta = h("span", { class: "meta" }, [
+          h("span", { text: "padrão " + fmt(it.qty) + " " + it.unit + " · em casa " + fmt(stockOf(it)) + " " + it.unit })
+        ]);
+        if (it.trip === "s") meta.appendChild(h("span", { class: "weekly", text: "toda semana" }));
+        var label = h("label", { class: "row", for: "c-" + it.id }, [
+          cb,
+          h("span", {}, [h("span", { class: "name", text: it.name }), h("br"), meta]),
+          h("span", { class: "qty" }, [h("b", { text: fmt(need(it)) }), " " + it.unit])
+        ]);
+        li.appendChild(label); ul.appendChild(li);
+      });
+      grid.appendChild(h("section", { class: "aisle" }, [
+        h("h2", {}, [g.section, h("small", { text: g.items.length + (g.items.length === 1 ? " item" : " itens") })]), ul
+      ]));
+    });
+    view.appendChild(grid);
+
+    var allChecked = inCart.length === shown.length;
+    view.appendChild(h("div", { class: "actions" }, [
+      h("button", { class: "btn", type: "button", text: allChecked ? "Desmarcar tudo" : "Marcar tudo", onclick: function () {
+        shown.forEach(function (it) { if (allChecked) delete state.cart[it.id]; else state.cart[it.id] = true; });
+        save(); render();
+      } }),
+      h("button", { class: "btn primary", type: "button", disabled: inCart.length === 0, text: "Finalizar compra (" + inCart.length + ")", onclick: finishShopping })
+    ]));
+  }
+
+  function finishShopping() {
+    var before = JSON.stringify({ stock: state.stock, cart: state.cart });
+    var n = 0;
+    state.items.forEach(function (it) {
+      if (state.cart[it.id] && need(it) > 0) {
+        state.stock[it.id] = round(stockOf(it) + need(it));
+        n++;
+      }
+    });
+    state.cart = {};
+    save();
+    render();
+    showToast("Compra registrada: " + n + (n === 1 ? " item entrou" : " itens entraram") + " no estoque.", function () {
+      var b = JSON.parse(before);
+      state.stock = b.stock; state.cart = b.cart;
+      save(); render();
+    });
+  }
+
+  /* ---------- Estoque ---------- */
+  function renderEstoque() {
+    var zero = state.items.filter(function (it) { return stockOf(it) <= 0; }).length;
+    var low = state.items.filter(function (it) { return stockOf(it) > 0 && stockOf(it) < it.qty; }).length;
+    var ok = state.items.length - zero - low;
+    var list = state.items.filter(function (it) {
+      var s = stockOf(it);
+      if (state.sfilter === "zero") return s <= 0;
+      if (state.sfilter === "low") return s > 0 && s < it.qty;
+      return true;
+    });
+
+    view.appendChild(h("div", { class: "bar" }, [
+      h("span", { class: "summary", text: ok + " completos · " + low + " abaixo do padrão · " + zero + " zerados" }),
+      chips([["all", "Tudo", state.items.length], ["low", "Abaixo do padrão", low], ["zero", "Zerados", zero]], state.sfilter, function (k) { state.sfilter = k; render(); })
+    ]));
+
+    if (!list.length) { view.appendChild(h("p", { class: "empty", text: "Nenhum item neste filtro." })); return; }
+
+    var grid = h("div", { class: "grid" });
+    groupBySection(list).forEach(function (g) {
+      var ul = h("ul");
+      g.items.forEach(function (it) {
+        var pill = h("span", { class: "pill" });
+        var input = h("input", { class: "field", type: "text", inputmode: "decimal", id: "e-" + it.id, value: fmt(stockOf(it)), "aria-label": "Em casa: " + it.name });
+        function paint() { var st = status(it); pill.className = "pill " + st[0]; pill.textContent = st[1]; }
+        function set(v) { state.stock[it.id] = v; input.value = fmt(v); paint(); save(); updateSummary(); }
+        input.addEventListener("change", function () { set(parseNum(input.value)); });
+        input.addEventListener("focus", function () { input.select(); });
+        var minus = h("button", { class: "step", type: "button", "aria-label": "Diminuir " + it.name, text: "−", onclick: function () { set(round(Math.max(0, stockOf(it) - stepOf(it.unit)))); } });
+        var plus = h("button", { class: "step", type: "button", "aria-label": "Aumentar " + it.name, text: "+", onclick: function () { set(round(stockOf(it) + stepOf(it.unit))); } });
+        paint();
+        ul.appendChild(h("li", {}, [h("div", { class: "row" }, [
+          h("span", { style: "grid-column: 1 / span 2" }, [
+            h("span", { class: "name", text: it.name }), h("br"),
+            h("span", { class: "meta" }, [h("span", { text: "padrão " + fmt(it.qty) + " " + it.unit }), pill])
+          ]),
+          h("span", { class: "stepper" }, [minus, input, h("span", { class: "unit", text: it.unit }), plus])
+        ])]));
+      });
+      grid.appendChild(h("section", { class: "aisle" }, [
+        h("h2", {}, [g.section, h("small", { text: g.items.length + (g.items.length === 1 ? " item" : " itens") })]), ul
+      ]));
+    });
+    view.appendChild(grid);
+    view.appendChild(h("p", { class: "note", text: "Anote aqui o que você tem em casa. Ao consumir algo, diminua a quantidade; a aba Comprar mostra a diferença até o padrão." }));
+  }
+
+  function updateSummary() {
+    var s = view.querySelector(".summary");
+    if (!s || state.tab !== "estoque") return;
+    var zero = state.items.filter(function (it) { return stockOf(it) <= 0; }).length;
+    var low = state.items.filter(function (it) { return stockOf(it) > 0 && stockOf(it) < it.qty; }).length;
+    s.textContent = (state.items.length - zero - low) + " completos · " + low + " abaixo do padrão · " + zero + " zerados";
+  }
+
+  /* ---------- Itens ---------- */
+  function sel(options, value, label) {
+    var s = h("select", { class: "field", "aria-label": label });
+    options.forEach(function (o) {
+      var op = h("option", { value: o[0], text: o[1] });
+      if (o[0] === value) op.selected = true;
+      s.appendChild(op);
+    });
+    return s;
+  }
+
+  function renderItens() {
+    var nameIn = h("input", { class: "field wide", type: "text", id: "n-name", placeholder: "Nome do item", "aria-label": "Nome do novo item" });
+    var qtyIn = h("input", { class: "field", type: "text", inputmode: "decimal", id: "n-qty", placeholder: "Qtd", "aria-label": "Quantidade padrão" });
+    var unitSel = sel(UNITS.map(function (u) { return [u, u]; }), "un", "Unidade");
+    var secSel = sel(SECTIONS.map(function (s) { return [s, s]; }), SECTIONS[0], "Seção");
+    var tripSel = sel([["m", TRIPS.m], ["s", TRIPS.s]], "m", "Tipo de compra");
+    var add = h("button", { class: "btn primary", type: "button", text: "Adicionar", onclick: function () {
+      var name = nameIn.value.trim();
+      if (!name) { nameIn.focus(); return; }
+      state.items.push({ id: "c" + Date.now(), section: secSel.value, name: name, qty: parseNum(qtyIn.value) || 1, unit: unitSel.value, trip: tripSel.value });
+      save(); render();
+    } });
+    view.appendChild(h("div", { class: "addbox" }, [
+      h("h2", { text: "Novo item" }),
+      h("div", { class: "addrow" }, [nameIn, qtyIn, unitSel, secSel, tripSel, add])
+    ]));
+
+    var grid = h("div", { class: "grid" });
+    groupBySection(state.items).forEach(function (g) {
+      var ul = h("ul");
+      g.items.forEach(function (it) {
+        var name = h("input", { class: "field", type: "text", value: it.name, "aria-label": "Nome" });
+        var qty = h("input", { class: "field", type: "text", inputmode: "decimal", value: fmt(it.qty), "aria-label": "Quantidade padrão de " + it.name });
+        var unit = sel(UNITS.map(function (u) { return [u, u]; }), it.unit, "Unidade de " + it.name);
+        var trip = sel([["m", TRIPS.m], ["s", TRIPS.s]], it.trip, "Tipo de compra de " + it.name);
+        trip.classList.add("trip");
+        name.addEventListener("change", function () { it.name = name.value.trim() || it.name; name.value = it.name; save(); });
+        qty.addEventListener("change", function () { it.qty = parseNum(qty.value) || it.qty; qty.value = fmt(it.qty); save(); });
+        unit.addEventListener("change", function () { it.unit = unit.value; save(); });
+        trip.addEventListener("change", function () { it.trip = trip.value; save(); });
+        var del = h("button", { class: "btn danger", type: "button", "aria-label": "Remover " + it.name, text: "Remover", onclick: function () {
+          state.items = state.items.filter(function (x) { return x.id !== it.id; });
+          delete state.stock[it.id]; delete state.cart[it.id];
+          save(); render();
+        } });
+        ul.appendChild(h("li", {}, [h("div", { class: "edit" }, [name, qty, unit, trip, del])]));
+      });
+      grid.appendChild(h("section", { class: "aisle", style: "grid-column: 1 / -1" }, [
+        h("h2", {}, [g.section, h("small", { text: g.items.length + (g.items.length === 1 ? " item" : " itens") })]), ul
+      ]));
+    });
+    view.appendChild(grid);
+
+    var resetBtn = h("button", { class: "btn danger", type: "button", text: state.confirmReset ? "Confirmar: apagar tudo e voltar à lista padrão" : "Restaurar lista padrão", onclick: function () {
+      if (!state.confirmReset) { state.confirmReset = true; render(); setTimeout(function () { state.confirmReset = false; if (state.tab === "itens") render(); }, 5000); return; }
+      state.items = seedItems(); state.stock = {}; state.cart = {}; state.confirmReset = false;
+      save(); render();
+    } });
+    var fileIn = h("input", { type: "file", accept: "application/json,.json", id: "import-file", hidden: true });
+    fileIn.addEventListener("change", function () {
+      var f = fileIn.files && fileIn.files[0];
+      if (!f) return;
+      var r = new FileReader();
+      r.onload = function () {
+        try {
+          var d = JSON.parse(String(r.result));
+          var ok = d && Array.isArray(d.items) && d.items.length && d.items.every(function (x) {
+            return x && typeof x.id === "string" && typeof x.name === "string" && typeof x.qty === "number" && typeof x.unit === "string" && typeof x.section === "string" && (x.trip === "m" || x.trip === "s");
+          });
+          if (!ok) throw new Error("formato");
+          state.items = d.items; state.stock = d.stock && typeof d.stock === "object" ? d.stock : {}; state.cart = {};
+          save(); render(); showToast("Dados importados.");
+        } catch (e) { showToast("Arquivo inválido. Use um backup exportado por este app."); }
+      };
+      r.readAsText(f);
+    });
+    view.appendChild(h("div", { class: "tools" }, [
+      h("button", { class: "btn", type: "button", text: "Exportar backup", onclick: exportData }),
+      h("button", { class: "btn", type: "button", text: "Importar backup", onclick: function () { fileIn.click(); } }),
+      fileIn, resetBtn
+    ]));
+    view.appendChild(h("p", { class: "note", text: "Os dados ficam só neste navegador (localStorage). Exporte um backup de vez em quando, principalmente antes de limpar os dados do navegador." }));
+  }
+
+  function exportData() {
+    var blob = new Blob([JSON.stringify({ items: state.items, stock: state.stock }, null, 2)], { type: "application/json" });
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "mercado-backup-" + new Date().toISOString().slice(0, 10) + ".json";
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
+  }
+
+  /* ---------- Render e abas ---------- */
+  function render() {
+    view.textContent = "";
+    Array.prototype.forEach.call(document.querySelectorAll(".tab"), function (b) {
+      if (b.getAttribute("data-tab") === state.tab) b.setAttribute("aria-current", "page"); else b.removeAttribute("aria-current");
+    });
+    if (state.tab === "estoque") renderEstoque();
+    else if (state.tab === "itens") renderItens();
+    else renderComprar();
+  }
+
+  Array.prototype.forEach.call(document.querySelectorAll(".tab"), function (b) {
+    b.addEventListener("click", function () {
+      state.tab = b.getAttribute("data-tab");
+      toastEl.textContent = "";
+      try { history.replaceState(null, "", "#" + state.tab); } catch (e) {}
+      render();
+    });
+  });
+
+  load();
+  var hash = (location.hash || "").replace("#", "");
+  if (hash === "estoque" || hash === "itens" || hash === "comprar") state.tab = hash;
+  render();
+})();
+</script>
+</body>
+</html>
